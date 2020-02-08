@@ -85,7 +85,6 @@ sa_Y = d_chd
 file = open("spamdata.csv", "r")
 
 spamData = np.genfromtxt(file, delimiter = ' ')
-print(spamData)
 
 sp_Y = spamData[:, [57]]
 
@@ -106,7 +105,7 @@ z_X = np.delete(zipData, 0, axis = 1 )
 
 # begin plotting
 step_size = 0.25
-max_iterations = 200
+max_iterations = 400
 
 def plot_error_percent(x, y, step_size, max_iterations):
 
@@ -153,11 +152,13 @@ def plot_error_percent(x, y, step_size, max_iterations):
     plt.show()
 
 
+######################################## Error Percent Plot ############################################
+
 # plot for SA data
 # plot_error_percent(sa_X, sa_Y, step_size, max_iterations)
 
 # plot for spam data
-# plot_error_percent(sp_X, sp_Y, step_size, max_iterations)
+plot_error_percent(sp_X, sp_Y, step_size, max_iterations)
 
 # plot for zip train data
-plot_error_percent(z_X, z_Y, step_size, max_iterations)
+# plot_error_percent(z_X, z_Y, step_size, max_iterations)
