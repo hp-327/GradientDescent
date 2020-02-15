@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd 
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_curve
 from matplotlib import pyplot as plt
 
 def calculate(x, y_tilde, weight_vector):
@@ -104,8 +105,9 @@ z_X = np.delete(zipData, 0, axis = 1 )
 
 
 # begin plotting
-step_size = 0.25
-max_iterations = 400
+step_size = 0.1
+
+max_iterations = 700
 
 def plot_error_percent(x, y, step_size, max_iterations):
 
@@ -129,6 +131,13 @@ def plot_error_percent(x, y, step_size, max_iterations):
     valid_predict[0.0 <= valid_predict] = 1
     valid_predict[0.0 > valid_predict]  = 0
 
+    # print counts
+    print("       y           ")
+    print("set            0     1")
+    print(" test        " + str((y_test == 0).sum()) + "     " + str((y_test == 1).sum()))
+    print(" train       " + str((y_train == 0).sum()) + "    " + str((y_test == 1).sum()))
+    print(" validation  " + str((y_validate == 0).sum()) + "     " + str((y_test == 1).sum()))
+
     # calculate error percent
     train_error = []
     valid_error = []
@@ -139,26 +148,69 @@ def plot_error_percent(x, y, step_size, max_iterations):
         valid_error.append(np.mean(y_validate != valid_predict[:,iter]))
 
     # calculate minimums
-    train_min = min(train_error)
-    valid_min = min(valid_error)
+    train_min = np.min(train_error)
+    valid_min = np.min(valid_error)
 
-    plt.plot(train_error, label='train')
-    plt.plot(valid_error, label='valid')
+    #train_min_y = train_error.index(train_min)
+    #valid_min_y = valid_error.index(valid_min)
+    
+    plt.plot(train_error, label='train', c='black') 
+    plt.plot(valid_error, label='valid', c='red')
+    #plt.plot(xy = (train_min, train_min_y),  marker='o')
+    #plt.plot(xy = (valid_min, valid_min_y), marker='o')
 
     plt.ylabel('percent error')
     plt.xlabel('number of iterations')
     plt.legend(loc='best')
 
     plt.show()
+    
+
+def plotROC(x, y):
+
+
+    # scale inputs
+    x = preprocessing.scale(x)
+
+    #split data, train 60, test 20, validate 20
+    x_train, x_test, y_train, y_test       = train_test_split(x, y,test_size=0.4,train_size=0.6)
+    x_test, x_validate, y_test, y_validate = train_test_split(x_test,y_test,test_size = 0.50,train_size =0.50)
+
+    weight_matrix = gradientDescent(x, y, step_size, max_iterations)  
+
+    # print counts
+    print("       y           ")
+    print("set            0     1")
+    print(" test        " + str((y_test == 0).sum()) + "     " + str((y_test == 1).sum()))
+    print(" train       " + str((y_train == 0).sum()) + "    " + str((y_test == 1).sum()))
+    print(" validation  " + str((y_validate == 0).sum()) + "     " + str((y_test == 1).sum()))
+
+    test_predict  = np.matmul(x_test, weight_matrix)
+
+    # calculate ROC 
+    tpr, fpr, thresholds = roc_curve(y_test, test_predict[:,0], pos_label =1)
+
+    baseline = [0, 1]
+
+    plt.plot(baseline, baseline, c = 'violet', label = 'baseline')
+    plt.plot(tpr, fpr, c = 'blue', label = 'logistic regression')
+    plt.ylabel('True Positive Rate')
+    plt.xlabel('False Positive Rate')
+    plt.title('ROC')
+    plt.legend(loc='best')
+    plt.show()
 
 
 ######################################## Error Percent Plot ############################################
 
 # plot for SA data
-# plot_error_percent(sa_X, sa_Y, step_size, max_iterations)
+#plot_error_percent(sa_X, sa_Y, step_size, max_iterations)
+#plotROC(sa_X, sa_Y)
 
 # plot for spam data
 plot_error_percent(sp_X, sp_Y, step_size, max_iterations)
+plotROC(sp_X, sp_Y)
 
 # plot for zip train data
-# plot_error_percent(z_X, z_Y, step_size, max_iterations)
+#plot_error_percent(z_X, z_Y, step_size, max_iterations)
+#plotROC(z_X, z_Y)
